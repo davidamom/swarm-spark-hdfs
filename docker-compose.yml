@@ -1,0 +1,249 @@
+# =============================================================================
+# BASE CONFIGURATION
+# =============================================================================
+
+version: "3.7"
+
+# =============================================================================
+# SERVICES
+# =============================================================================
+
+services:
+
+#SPARK SERVICES
+  spark-master:
+    # env_file: ./.env
+    # image: registry:5000/spark:latest
+    # image: bde2020/spark-master:2.4.5-hadoop2.7
+    build: ./spark
+    # user: root
+    ports:
+      - "4040:4040"
+      - "7077:7077"
+      - "8080:8080"
+      # - target: 4040
+      #   published: 4040
+      #   protocol: tcp
+      #   mode: host
+      # - target: 7077
+      #   published: 7077
+      #   protocol: tcp
+      #   mode: host
+      # - target: 8080
+      #   published: 8080
+      #   protocol: tcp
+      #   mode: host
+    environment:
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+      SPARK_RPC_ENCRYPTION_ENABLED: "no"
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: "no"
+      SPARK_SSL_ENABLED: "no"
+    # volumes:
+    #   - /mnt/dados/downunder/:/mnt/dados/downunder/
+      # - ./log/downunder/report:/var/log/downunder/report
+    networks:
+      - spark-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      # update_config:
+      #   parallelism: 2
+      #   delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+    
+  sparkworker:
+    # image: registry:5000/spark:latest
+    # image: bde2020/spark-worker:2.4.5-hadoop2.7
+    build: ./spark
+    # image: bitnami/spark:latest
+    # entrypoint: dockerize -wait tcp://sparkmaster:7077 -timeout 240s /sbin/my_init
+    ports:
+      - "8091:8081"
+      # - target: 8091
+      #   published: 8081
+      #   protocol: tcp
+      #   mode: host
+    links:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_WORKER_MEMORY: 14G
+      SPARK_WORKER_CORES: 6
+      SPARK_RPC_AUTHENTICATION_ENABLED: "no"
+      SPARK_RPC_ENCRYPTION_ENABLED: "no"
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: "no"
+      SPARK_SSL_ENABLED: "no"
+    networks:
+      - spark-network
+    deploy:
+      mode: global
+      # replicas: 2
+      # update_config:
+      #   parallelism: 2
+      #   delay: 10s
+      # restart_policy:
+      #   condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+  
+
+  #HDFS SERVICES
+  primary-namenode:
+    hostname: primary-namenode
+    build: ./namenode
+    # image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    ports:
+      - "9876:50070"
+      - "9870:9870"
+      - "8020:8020"
+    environment:
+      - CLUSTER_NAME=DownunderHDFS
+      - INIT_DAEMON_STEP=setup_hdfs
+      - HDFS_CONF_dfs_webhdfs_enabled=true
+      - HDFS_CONF_dfs_permissions_enabled=false
+      # - HDFS_CONF_dfs_disk_balancer_enabled=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_iphostnamecheck=true
+      - CORE_CONF_hadoop_http_staticuser_user=root
+      - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+      - CORE_CONF_hadoop_proxyuser_hue_groups=*
+      - CORE_CONF_io_compression_codecs=org.apache.hadoop.io.compress.SnappyCodec
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___io___check=false
+      - HDFS_CONF_dfs_client_use_datanode_hostname=true
+      - HDFS_CONF_dfs_datanode_use_datanode_hostname=true
+      - HDFS_CONF_dfs_disk_balancer_enabled=true
+      - HDFS_CONF_dfs_namenode_rpc___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_servicerpc___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_http___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_https___bind___host=0.0.0.0
+    volumes:
+      - primary-namenode:/hadoop/dfs/name
+    networks:
+      - spark-network
+          # aliases:
+          #   "primary-namenode"
+    deploy:
+      mode: replicated
+      replicas: 1
+      # replicas: 
+      # update_config:
+      #   parallelism: 2
+      #   delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+          
+  secondary-namenode:
+    hostname: secondary-namenode
+    build: ./namenode
+    # image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    ports:
+      - "9877:50070"
+      - "9871:9870"
+      - "8021:8020"
+    environment:
+      - CLUSTER_NAME=DownunderHDFS
+      # - INIT_DAEMON_STEP=setup_hdfs
+      - HDFS_CONF_dfs_webhdfs_enabled=true
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_iphostnamecheck=true
+      - CORE_CONF_hadoop_http_staticuser_user=root
+      - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+      - CORE_CONF_hadoop_proxyuser_hue_groups=*
+      - CORE_CONF_io_compression_codecs=org.apache.hadoop.io.compress.SnappyCodec
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___io___check=false
+      - HDFS_CONF_dfs_client_use_datanode_hostname=true
+      - HDFS_CONF_dfs_datanode_use_datanode_hostname=true
+      - HDFS_CONF_dfs_disk_balancer_enabled=true
+      - HDFS_CONF_dfs_namenode_rpc___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_servicerpc___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_http___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_https___bind___host=0.0.0.0
+    volumes:
+      - secondary-namenode:/hadoop/dfs/name
+    networks:
+      - spark-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      # replicas: 
+      # update_config:
+      #   parallelism: 2
+      #   delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
+
+  datanode:
+    hostname: datanode
+    build: ./datanode
+    # image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    environment:
+      - CLUSTER_NAME=DownunderHDFS
+      - CORE_CONF_fs_defaultFS=hdfs://primary-namenode:8020
+      - HDFS_CONF_dfs_webhdfs_enabled=true
+      - HDFS_CONF_dfs_namenode_datanode_registration_iphostnamecheck=true
+      - CORE_CONF_hadoop_http_staticuser_user=root
+      - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+      - CORE_CONF_hadoop_proxyuser_hue_groups=*
+      - CORE_CONF_io_compression_codecs=org.apache.hadoop.io.compress.SnappyCodec
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
+      - HDFS_CONF_dfs_namenode_datanode_registration_ip___io___check=false
+      - HDFS_CONF_dfs_client_use_datanode_hostname=true
+      - HDFS_CONF_dfs_datanode_use_datanode_hostname=true
+      - HDFS_CONF_dfs_disk_balancer_enabled=true
+      - HDFS_CONF_dfs_namenode_rpc___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_servicerpc___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_http___bind___host=0.0.0.0
+      - HDFS_CONF_dfs_namenode_https___bind___host=0.0.0.0
+    ports:
+      - "9878:50075"
+      - "9864:9864"
+      - "50020:50020"
+      - "41430:41430"
+      - "50010:50010"
+    links: 
+      - primary-namenode
+    volumes:
+      - datanode:/hadoop/dfs/data
+    networks:
+      - spark-network
+          # aliases:
+          #   - "datanode"
+    depends_on: 
+      - primary-namenode
+      - secondary-namenode
+    deploy:
+      mode: global
+      # replicas: 
+      # update_config:
+      #   parallelism: 2
+      #   delay: 10s
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
+
+volumes:
+  primary-namenode:
+  secondary-namenode:
+  datanode:
+
+networks:
+  spark-network:
+    driver: overlay
+    attachable: true
