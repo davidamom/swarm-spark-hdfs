@@ -45,5 +45,5 @@ seaborn==0.10.0           # via -r requirements.txt
 shapely==1.7.0            # via pyrasterframes
 six==1.14.0               # via branca, cycler, python-dateutil
 snuggs==1.4.7             # via rasterio
-urllib3==1.25.9           # via requests
+urllib3==1.26.5           # via requests
 xarray==0.15.1            # via -r requirements.txt
