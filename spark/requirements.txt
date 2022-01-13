@@ -27,7 +27,7 @@ matplotlib==3.2.1         # via scikit-image, seaborn
 networkx==2.4             # via scikit-image
 numpy==1.18.3             # via cfgrib, eccodes, folium, imageio, matplotlib, pandas, pyrasterframes, pywavelets, rasterio, scipy, seaborn, snuggs, xarray
 pandas==1.0.3             # via pyrasterframes, seaborn, xarray
-pillow==7.1.1             # via imageio, scikit-image
+pillow==9.0.0             # via imageio, scikit-image
 py4j==0.10.7              # via pyspark
 pycparser==2.20           # via cffi
 pyparsing==2.4.7          # via matplotlib, snuggs
