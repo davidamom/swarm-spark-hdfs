@@ -25,7 +25,7 @@ kiwisolver==1.2.0         # via matplotlib
 markupsafe==1.1.1         # via jinja2
 matplotlib==3.2.1         # via scikit-image, seaborn
 networkx==2.4             # via scikit-image
-numpy==1.18.3             # via cfgrib, eccodes, folium, imageio, matplotlib, pandas, pyrasterframes, pywavelets, rasterio, scipy, seaborn, snuggs, xarray
+numpy==1.22.0             # via cfgrib, eccodes, folium, imageio, matplotlib, pandas, pyrasterframes, pywavelets, rasterio, scipy, seaborn, snuggs, xarray
 pandas==1.0.3             # via pyrasterframes, seaborn, xarray
 pillow==7.1.1             # via imageio, scikit-image
 py4j==0.10.7              # via pyspark
