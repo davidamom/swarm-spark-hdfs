@@ -7,7 +7,7 @@
 affine==2.3.0             # via rasterio
 attrs==19.3.0             # via cfgrib, eccodes, rasterio
 branca==0.4.0             # via folium
-certifi==2020.4.5.1       # via requests
+certifi==2022.12.7       # via requests
 cffi==1.14.0              # via cfgrib, eccodes
 cfgrib==0.9.8.1           # via -r requirements.txt
 chardet==3.0.4            # via requests
