@@ -5,7 +5,7 @@
 #    pip-compile pre-requirements.txt
 #
 pypandoc==1.5             # via -r pre-requirements.txt
-wheel==0.34.2             # via pypandoc
+wheel==0.38.1             # via pypandoc
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
